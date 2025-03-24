@@ -1,5 +1,5 @@
 <script setup>
-import {ref} from 'vue'
+import {ref, defineEmits} from 'vue'
 
 defineProps({
   msg: {
@@ -11,6 +11,8 @@ defineProps({
 let caStations = ref([])
 let selectedValue = ref("")
 let tideData = ref([])
+
+let emit = defineEmits()
 
 const fetchCAStations = async() => {
   await fetch('https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations.json?type=benchmarks', {
@@ -44,7 +46,12 @@ const fetchStationData = async() => {
     tideData.value = predictions.predictions
   })
   .catch(err => console.log(err.message))
-  console.log(tideData.value)
+  //console.log(tideData.value)
+  sendDataToParent(tideData.value)
+}
+
+const sendDataToParent = (data) => {
+  emit('send-data', data)
 }
 
 </script>
@@ -52,9 +59,6 @@ const fetchStationData = async() => {
 <template>
   <div class="greetings">
     <h1 class="teal">{{ msg }}</h1>
-    <h3>
-      Find out your predicted fishing success based on location!(CA support only for now)
-    </h3>
 
     <label for="cars">Choose a city:</label>
     <br>
