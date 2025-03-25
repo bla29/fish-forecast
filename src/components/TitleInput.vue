@@ -1,5 +1,5 @@
 <script setup>
-import {ref, defineEmits} from 'vue'
+import {ref, defineEmits, onMounted} from 'vue'
 
 defineProps({
   msg: {
@@ -11,6 +11,7 @@ defineProps({
 let caStations = ref([])
 let selectedValue = ref("")
 let tideData = ref([])
+let errorMsg = ref(false)
 
 let emit = defineEmits()
 
@@ -42,8 +43,15 @@ const fetchStationData = async() => {
   })
   .then(res => res.json())
   .then(data => {
-    let predictions = data
-    tideData.value = predictions.predictions
+    tideData.value = []
+    if(data.predictions) {
+      errorMsg.value = false
+      let predictions = data
+      tideData.value = predictions.predictions
+    }
+    else {
+      errorMsg.value = true
+    }
   })
   .catch(err => console.log(err.message))
   //console.log(tideData.value)
@@ -54,6 +62,10 @@ const sendDataToParent = (data) => {
   emit('send-data', data)
 }
 
+onMounted(() => {
+  fetchCAStations()
+})
+
 </script>
 
 <template>
@@ -63,11 +75,12 @@ const sendDataToParent = (data) => {
     <label for="cars">Choose a city:</label>
     <br>
     <div class = "dropdown">
-      <select @click = "fetchCAStations()" v-model="selectedValue">
+      <select v-model="selectedValue">
         <option v-for="station in caStations" :key="station.id" :value="station.id">{{ station.name }}</option>
       </select>
       <button @click="fetchStationData()">Confirm</button>
     </div>
+    <p v-if="errorMsg" class="errorMsg">This city does not have tide information. Please select another city.</p>
   </div>
 </template>
 
@@ -103,6 +116,10 @@ h3 {
 select {
   flex-grow: 1;
   padding: 10px;
+}
+
+.errorMsg {
+  color: red;
 }
 
 </style>
